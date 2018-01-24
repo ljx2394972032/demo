@@ -48,18 +48,4 @@ public class TestController {
         return ResponseEntity.SUCC().data(MakeOrderNum.makeOrderNum()).build();
     }
 
-    @RequestMapping(value = "/share", method = RequestMethod.POST)
-    @ResponseBody
-    public Map<String, Object> share(HttpServletRequest request) {
-        String urlTemp = "http://" + request.getServerName() + request.getContextPath();
-        String urlpath = "http://" + request.getServerName();
-        String appUrl = request.getParameter("url");
-        if (request.getParameter("code") != null) {
-            appUrl += "&code=" + request.getParameter("code");
-        }
-        if (request.getParameter("state") != null) {
-            appUrl += "&state=" + request.getParameter("state");
-        }
-        return WxConfigUtil.getSignature(appUrl, ContentValues.APPID, ContentValues.SECRET, urlTemp, urlpath);
-    }
 }
