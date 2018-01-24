@@ -21,10 +21,9 @@ import java.util.Map;
 
 
 /**
- * 公众平台通用接口工具类
- *
- * @author james
- * @date 2015-02-27
+ * @Author : ljx
+ * @Description : 公众平台通用接口工具类
+ * @Date : 2018/1/24 14:47
  */
 public class WxConfigUtil {
     // 获取access_token的接口地址（GET） 限2000（次/天）
@@ -34,7 +33,7 @@ public class WxConfigUtil {
     // 缓存添加的时间
     public static String cacheAddTime = null;
     // token,ticket缓存
-    public static Map<String, Token> TOKEN_TICKET_CACHE = new HashMap<String, Token>();
+    public static Map<String, Token> TOKEN_TICKET_CACHE = new HashMap<>();
     // token对应的key
     private static final String TOKEN = "token";
     // ticket对应的key
@@ -56,11 +55,11 @@ public class WxConfigUtil {
         Token accessTocken = getToken(appId, secret, System.currentTimeMillis() / 1000);
         Token accessTicket = getTicket(accessTocken.getToken(), System.currentTimeMillis() / 1000);
         signature = signature(accessTicket.getTicket(), cacheAddTime, noncestr, appUrl);
-        System.out.println("-=-=-=-=-=-=-=-=appUrl:" + appUrl);
-        System.out.println("-=-=-=-=-=-=-=-=token:" + accessTocken.getToken());
-        System.out.println("-=-=-=-=-=-=-=-=ticket:" + accessTicket.getTicket());
-        System.out.println("-=-=-=-=-=-=-=-=signature:" + signature);
-        System.out.println("-=-=-=-=-=-=-=-=timestamp:" + cacheAddTime);
+        System.out.println(">>>>>>>appUrl:" + appUrl);
+        System.out.println(">>>>>>>token:" + accessTocken.getToken());
+        System.out.println(">>>>>>>ticket:" + accessTicket.getTicket());
+        System.out.println(">>>>>>>signature:" + signature);
+        System.out.println(">>>>>>>timestamp:" + cacheAddTime);
         Map<String, Object> map = new HashMap<>();
         map.put("appId", appId);
         map.put("timestamp", cacheAddTime);
@@ -72,52 +71,6 @@ public class WxConfigUtil {
         return map;
     }
 
-    /**
-     * 获得Token
-     *
-     * @return
-     */
-    public static String getToken(String appId, String secret) {
-        Token accessTocken = getToken(appId, secret, System.currentTimeMillis() / 1000);
-        return accessTocken.getToken();
-    }
-
-    /**
-     * 签名
-     *
-     * @param timestamp
-     * @return
-     */
-    private static String signature(String jsapi_ticket, String timestamp, String noncestr, String url) {
-        jsapi_ticket = "jsapi_ticket=" + jsapi_ticket;
-        timestamp = "timestamp=" + timestamp;
-        noncestr = "noncestr=" + noncestr;
-        url = "url=" + url;
-        String[] arr = new String[]{jsapi_ticket, noncestr, timestamp, url};
-        // 将token、timestamp、nonce,url参数进行字典序排序
-        Arrays.sort(arr);
-        StringBuilder content = new StringBuilder();
-        for (int i = 0; i < arr.length; i++) {
-            content.append(arr[i]);
-            if (i != arr.length - 1) {
-                content.append("&");
-            }
-        }
-        MessageDigest md = null;
-        String tmpStr = null;
-
-        try {
-            md = MessageDigest.getInstance("SHA-1");
-            // 将三个参数字符串拼接成一个字符串进行sha1加密
-            byte[] digest = md.digest(content.toString().getBytes());
-            tmpStr = byteToStr(digest);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-
-        content = null;
-        return tmpStr;
-    }
 
     /**
      * 获取access_token
@@ -149,6 +102,16 @@ public class WxConfigUtil {
     }
 
     /**
+     * 获得Token
+     *
+     * @return
+     */
+    public static String getToken(String appId, String secret) {
+        Token accessTocken = getToken(appId, secret, System.currentTimeMillis() / 1000);
+        return accessTocken.getToken();
+    }
+
+    /**
      * 获取ticket
      *
      * @param token
@@ -158,10 +121,10 @@ public class WxConfigUtil {
         Token tockenTicketCache = getTokenTicket(TICKET);
         Token Token = null;
         if (tockenTicketCache != null && (currentTime - tockenTicketCache.getAddTime() <= tockenTicketCache.getExpiresIn())) {// 缓存中有ticket
-            System.out.println("==========缓存中ticket已获取时长为：" + (currentTime - tockenTicketCache.getAddTime()) + "毫秒，可以重新使用");
+            System.out.println("==========map缓存中ticket已获取时长为：" + (currentTime - tockenTicketCache.getAddTime()) + "毫秒，可以重新使用");
             return tockenTicketCache;
         }
-        System.out.println("==========缓存中ticket不存在或已过期===============");
+        System.out.println("==========map缓存中ticket不存在或已过期===============");
         String requestUrl = jsapi_ticket_url.replace("ACCESS_TOKEN", token);
         JSONObject jsonObject = httpRequest(requestUrl, "GET", null);
         // 如果请求成功
@@ -175,6 +138,40 @@ public class WxConfigUtil {
         }
         return Token;
     }
+
+    /**
+     * 签名
+     *
+     * @param timestamp
+     * @return
+     */
+    private static String signature(String jsapi_ticket, String timestamp, String noncestr, String url) {
+        jsapi_ticket = "jsapi_ticket=" + jsapi_ticket;
+        timestamp = "timestamp=" + timestamp;
+        noncestr = "noncestr=" + noncestr;
+        url = "url=" + url;
+        String[] arr = new String[]{jsapi_ticket, noncestr, timestamp, url};
+        // 将token、timestamp、nonce,url参数进行字典序排序
+        Arrays.sort(arr);
+        StringBuilder content = new StringBuilder();
+        for (int i = 0; i < arr.length; i++) {
+            content.append(arr[i]);
+            if (i != arr.length - 1) {
+                content.append("&");
+            }
+        }
+        String tmpStr = null;
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            // 将三个参数字符串拼接成一个字符串进行sha1加密
+            byte[] digest = md.digest(content.toString().getBytes());
+            tmpStr = byteToStr(digest);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return tmpStr;
+    }
+
 
     /**
      * 发起https请求并获取结果
@@ -194,20 +191,16 @@ public class WxConfigUtil {
             sslContext.init(null, tm, new java.security.SecureRandom());
             // 从上述SSLContext对象中得到SSLSocketFactory对象
             SSLSocketFactory ssf = sslContext.getSocketFactory();
-
             URL url = new URL(requestUrl);
             HttpsURLConnection httpUrlConn = (HttpsURLConnection) url.openConnection();
             httpUrlConn.setSSLSocketFactory(ssf);
-
             httpUrlConn.setDoOutput(true);
             httpUrlConn.setDoInput(true);
             httpUrlConn.setUseCaches(false);
             // 设置请求方式（GET/POST）
             httpUrlConn.setRequestMethod(requestMethod);
-
             if ("GET".equalsIgnoreCase(requestMethod))
                 httpUrlConn.connect();
-
             // 当有数据需要提交时
             if (null != outputStr) {
                 OutputStream outputStream = httpUrlConn.getOutputStream();
@@ -215,13 +208,11 @@ public class WxConfigUtil {
                 outputStream.write(outputStr.getBytes("UTF-8"));
                 outputStream.close();
             }
-
             // 将返回的输入流转换成字符串
             InputStream inputStream = httpUrlConn.getInputStream();
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream, "utf-8");
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-            String str = null;
+            String str;
             while ((str = bufferedReader.readLine()) != null) {
                 buffer.append(str);
             }
@@ -229,7 +220,6 @@ public class WxConfigUtil {
             inputStreamReader.close();
             // 释放资源
             inputStream.close();
-            inputStream = null;
             httpUrlConn.disconnect();
             jsonObject = JSONObject.parseObject(buffer.toString());
             // jsonObject = JSONObject.fromObject(buffer.toString());
@@ -262,12 +252,10 @@ public class WxConfigUtil {
      * @return
      */
     private static String byteToHexStr(byte mByte) {
-
         char[] Digit = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
         char[] tempArr = new char[2];
         tempArr[0] = Digit[(mByte >>> 4) & 0X0F];
         tempArr[1] = Digit[mByte & 0X0F];
-
         String s = new String(tempArr);
         return s;
     }
@@ -279,7 +267,7 @@ public class WxConfigUtil {
      */
     private static Token getTokenTicket(String key) {
         if (TOKEN_TICKET_CACHE != null && TOKEN_TICKET_CACHE.get(key) != null) {
-            System.out.println("==========从缓存中获取到了" + key + "成功===============");
+            System.out.println("==========从map缓存中获取到了" + key + "成功===============");
             return TOKEN_TICKET_CACHE.get(key);
         }
         return null;
@@ -293,7 +281,7 @@ public class WxConfigUtil {
     private static void updateToken(String key, Token accessTocken) {
         if (TOKEN_TICKET_CACHE != null && TOKEN_TICKET_CACHE.get(key) != null) {
             TOKEN_TICKET_CACHE.remove(key);
-            System.out.println("==========从缓存中删除" + key + "成功===============");
+            System.out.println("==========从map缓存中删除" + key + "成功===============");
         }
         TOKEN_TICKET_CACHE.put(key, accessTocken);
         cacheAddTime = String.valueOf(accessTocken.getAddTime());// 更新缓存修改的时间

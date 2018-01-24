@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.ljx.demo.model.JsonResult;
 import com.ljx.demo.model.ResponseData;
+import com.ljx.demo.utils.CollectionUtil;
 import com.ljx.demo.utils.MakeOrderNum;
 import com.ljx.demo.utils.wechatUtils.*;
 import org.apache.log4j.Logger;
