@@ -103,8 +103,7 @@ public class WechatTransferController {
                               String callback) {
         LOG.info("[/transfer/pay/query]");
         if (StringUtil.isEmpty(tradeno)) {
-            WebUtil.response(response, WebUtil.packJsonp(callback, JSON
-                    .toJSONString(new JsonResult(-1, "转账订单号不能为空", new ResponseData()), SerializerFeatureUtil.FEATURES)));
+            WebUtil.response(response, WebUtil.packJsonp(callback, JSON.toJSONString(new JsonResult(-1, "转账订单号不能为空", new ResponseData()), SerializerFeatureUtil.FEATURES)));
         }
 
         Map<String, String> restmap = null;
@@ -115,7 +114,6 @@ public class WechatTransferController {
             parm.put("partner_trade_no", tradeno);
             parm.put("nonce_str", PayUtil.getNonceStr());
             parm.put("sign", PayUtil.getSign(parm, API_SECRET));
-
             String restxml = HttpUtils.posts(TRANSFERS_PAY_QUERY, XmlUtil.xmlFormat(parm, true));
             restmap = XmlUtil.xmlParse(restxml);
         } catch (Exception e) {
@@ -131,14 +129,12 @@ public class WechatTransferController {
             transferMap.put("payment_amount", restmap.get("payment_amount")); //转账金额
             transferMap.put("transfer_time", restmap.get("transfer_time")); //转账时间
             transferMap.put("desc", restmap.get("desc")); //转账描述
-            WebUtil.response(response, WebUtil.packJsonp(callback, JSON
-                    .toJSONString(new JsonResult(1, "订单转账成功", new ResponseData(null, transferMap)), SerializerFeatureUtil.FEATURES)));
+            WebUtil.response(response, WebUtil.packJsonp(callback, JSON.toJSONString(new JsonResult(1, "订单转账成功", new ResponseData(null, transferMap)), SerializerFeatureUtil.FEATURES)));
         } else {
             if (CollectionUtil.isNotEmpty(restmap)) {
                 LOG.info("订单转账失败：" + restmap.get("err_code") + ":" + restmap.get("err_code_des"));
             }
-            WebUtil.response(response, WebUtil.packJsonp(callback, JSON
-                    .toJSONString(new JsonResult(-1, "订单转账失败", new ResponseData()), SerializerFeatureUtil.FEATURES)));
+            WebUtil.response(response, WebUtil.packJsonp(callback, JSON.toJSONString(new JsonResult(-1, "订单转账失败", new ResponseData()), SerializerFeatureUtil.FEATURES)));
         }
     }
 

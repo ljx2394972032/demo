@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.ljx.demo.model.Token;
 import com.ljx.demo.utils.wechatUtils.MyX509TrustManager;
 import com.ljx.demo.utils.wechatUtils.RandomUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -28,6 +30,9 @@ import java.util.Map;
  * @Date : 2018/1/24 14:47
  */
 public class WxConfigUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(WxConfigUtil.class);
+
     // 获取access_token的接口地址（GET） 限2000（次/天）
     public final static String access_token_url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=APPID&secret=APPSECRET";
     // 获取jsapi_ticket的接口地址（GET） 限2000（次/天）
@@ -55,16 +60,22 @@ public class WxConfigUtil {
         }
         String signature;
         Token accessTocken = getToken(appId, secret, System.currentTimeMillis() / 1000);
+        if (accessTocken == null) {
+            return null;
+        }
         Token accessTicket = getTicket(accessTocken.getToken(), System.currentTimeMillis() / 1000);
+        if (accessTicket == null) {
+            return null;
+        }
         signature = signature(accessTicket.getTicket(), cacheAddTime, noncestr, appUrl);
-        System.out.println(">>>>>>>appUrl:" + appUrl);
-        System.out.println(">>>>>>>token:" + accessTocken.getToken());
-        System.out.println(">>>>>>>ticket:" + accessTicket.getTicket());
-        System.out.println(">>>>>>>signature:" + signature);
-        System.out.println(">>>>>>>timestamp:" + cacheAddTime);
+        log.info(">>>>>>>appUrl:" + appUrl);
+        log.info(">>>>>>>token:" + accessTocken.getToken());
+        log.info(">>>>>>>ticket:" + accessTicket.getTicket());
+        log.info(">>>>>>>signature:" + signature);
+        log.info(">>>>>>>timestamp:" + cacheAddTime);
         Map<String, Object> map = new HashMap<>();
         map.put("appId", appId);
-        map.put("timestamp", cacheAddTime);
+        map.put("timestamp", Long.valueOf(cacheAddTime) * 1000);
         map.put("nonceStr", noncestr);
         map.put("appUrl", appUrl);
         map.put("signature", signature);
@@ -72,7 +83,6 @@ public class WxConfigUtil {
         map.put("urlpath", urlpath);
         return map;
     }
-
 
     /**
      * 获取access_token
@@ -83,35 +93,27 @@ public class WxConfigUtil {
      */
     public static Token getToken(String appid, String appsecret, long currentTime) {
         Token tockenTicketCache = getTokenTicket(TOKEN);
-        Token Token = null;
+        Token Token;
         if (tockenTicketCache != null && (currentTime - tockenTicketCache.getAddTime() <= tockenTicketCache.getExpiresIn())) {// 缓存存在并且没过期
-            System.out.println("==========缓存中token已获取时长为：" + (currentTime - tockenTicketCache.getAddTime()) + "毫秒，可以重新使用");
+            log.info("==========缓存中token已获取时长为：" + (currentTime - tockenTicketCache.getAddTime()) + "秒，可以重新使用");
             return tockenTicketCache;
         }
-        System.out.println("==========缓存中token不存在或已过期===============");
+        log.info("==========缓存中token不存在或已过期===============");
         String requestUrl = access_token_url.replace("APPID", appid).replace("APPSECRET", appsecret);
         JSONObject jsonObject = httpRequest(requestUrl, "GET", null);
-        // 如果请求成功
-        if (null != jsonObject) {
-            Token = new Token();
-            Token.setToken(jsonObject.getString("access_token"));
-            Token.setExpiresIn(jsonObject.getIntValue("expires_in") / 2);// 正常过期时间是7200秒，此处设置3600秒读取一次
-            System.out.println("==========tocket缓存过期时间为:" + Token.getExpiresIn() + "毫秒");
-            Token.setAddTime(currentTime);
-            updateToken(TOKEN, Token);
+        log.info("获取token返回：" + jsonObject);
+        // 如果请求不成功
+        if (jsonObject == null || jsonObject.getString("access_token") == null) {
+            return null;
         }
+        Token = new Token();
+        Token.setToken(jsonObject.getString("access_token"));
+        Token.setExpiresIn(jsonObject.getIntValue("expires_in") / 2);// 正常过期时间是7200秒，此处设置3600秒读取一次
+        Token.setAddTime(currentTime);
+        updateToken(TOKEN, Token);
         return Token;
     }
 
-    /**
-     * 获得Token
-     *
-     * @return
-     */
-    public static String getToken(String appId, String secret) {
-        Token accessTocken = getToken(appId, secret, System.currentTimeMillis() / 1000);
-        return accessTocken.getToken();
-    }
 
     /**
      * 获取ticket
@@ -121,23 +123,24 @@ public class WxConfigUtil {
      */
     private static Token getTicket(String token, long currentTime) {
         Token tockenTicketCache = getTokenTicket(TICKET);
-        Token Token = null;
+        Token Token;
         if (tockenTicketCache != null && (currentTime - tockenTicketCache.getAddTime() <= tockenTicketCache.getExpiresIn())) {// 缓存中有ticket
-            System.out.println("==========map缓存中ticket已获取时长为：" + (currentTime - tockenTicketCache.getAddTime()) + "毫秒，可以重新使用");
+            log.info("==========map缓存中ticket已获取时长为：" + (currentTime - tockenTicketCache.getAddTime()) + "秒，可以重新使用");
             return tockenTicketCache;
         }
-        System.out.println("==========map缓存中ticket不存在或已过期===============");
+        log.info("==========map缓存中ticket不存在或已过期===============");
         String requestUrl = jsapi_ticket_url.replace("ACCESS_TOKEN", token);
         JSONObject jsonObject = httpRequest(requestUrl, "GET", null);
-        // 如果请求成功
-        if (null != jsonObject) {
-            Token = new Token();
-            Token.setTicket(jsonObject.getString("ticket"));
-            Token.setExpiresIn(jsonObject.getIntValue("expires_in") / 2);// 正常过期时间是7200秒，此处设置3600秒读取一次
-            System.out.println("==========ticket缓存过期时间为:" + Token.getExpiresIn() + "毫秒");
-            Token.setAddTime(currentTime);
-            updateToken(TICKET, Token);
+        log.info("获取Ticket返回：" + jsonObject);
+        // 如果请求不成功
+        if (jsonObject == null || jsonObject.getString("ticket") == null) {
+            return null;
         }
+        Token = new Token();
+        Token.setTicket(jsonObject.getString("ticket"));
+        Token.setExpiresIn(jsonObject.getIntValue("expires_in") / 2);// 正常过期时间是7200秒，此处设置3600秒读取一次
+        Token.setAddTime(currentTime);
+        updateToken(TICKET, Token);
         return Token;
     }
 
@@ -283,10 +286,8 @@ public class WxConfigUtil {
     private static void updateToken(String key, Token accessTocken) {
         if (TOKEN_TICKET_CACHE != null && TOKEN_TICKET_CACHE.get(key) != null) {
             TOKEN_TICKET_CACHE.remove(key);
-            System.out.println("==========从map缓存中删除" + key + "成功===============");
         }
         TOKEN_TICKET_CACHE.put(key, accessTocken);
         cacheAddTime = String.valueOf(accessTocken.getAddTime());// 更新缓存修改的时间
-        System.out.println("==========更新缓存中" + key + "成功===============");
     }
 }

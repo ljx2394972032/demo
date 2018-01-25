@@ -1,0 +1,6 @@
+server:
+  port: 80
+# 微信配置
+wechat:
+ appid: wx35a6d6cb9b60c960
+ secret: 409c3a8334fcf1dbed11c518b9121b66
