@@ -4,7 +4,7 @@ import com.ljx.demo.model.User;
 import com.ljx.demo.response.ResponseEntity;
 import com.ljx.demo.response.ResponseMoreEntity;
 import com.ljx.demo.utils.MakeOrderNum;
-import com.ljx.demo.utils.wechatUtils.WxConfigUtil;
+import com.ljx.demo.utils.wechatUtils.wechatShare.WxConfigUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -51,18 +51,17 @@ public class TestController {
         return ResponseEntity.SUCC().data(MakeOrderNum.makeOrderNum()).build();
     }
 
-    @RequestMapping(value = "/share", method = RequestMethod.POST)
+    @RequestMapping("/share")
     @ResponseBody
-    public Map<String, Object> share(HttpServletRequest request) {
+    public ResponseEntity share(HttpServletRequest request, String appUrl) {
         String urlTemp = "http://" + request.getServerName() + request.getContextPath();
         String urlpath = "http://" + request.getServerName();
-        String appUrl = request.getParameter("url");
         if (request.getParameter("code") != null) {
             appUrl += "&code=" + request.getParameter("code");
         }
         if (request.getParameter("state") != null) {
             appUrl += "&state=" + request.getParameter("state");
         }
-        return WxConfigUtil.getSignature(appUrl, "自己的appid", "自己的secret", urlTemp, urlpath);
+        return ResponseEntity.SUCC().data(WxConfigUtil.getSignature(appUrl, "自己的appid", "自己的secret", urlTemp, urlpath)).build();
     }
 }

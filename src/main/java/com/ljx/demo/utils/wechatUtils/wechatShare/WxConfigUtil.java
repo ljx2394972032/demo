@@ -1,7 +1,9 @@
-package com.ljx.demo.utils.wechatUtils;
+package com.ljx.demo.utils.wechatUtils.wechatShare;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ljx.demo.model.Token;
+import com.ljx.demo.utils.wechatUtils.MyX509TrustManager;
+import com.ljx.demo.utils.wechatUtils.RandomUtil;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
