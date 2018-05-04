@@ -1,6 +1,35 @@
 server:
-  port: 80
+  tomcat:
+    uri-encoding: UTF-8
+    max-application-dev.ymlthreads: 1000
+    min-spare-threads: 30
+  port: 8888
+
+spring:
+  profiles:
+    active: dev
+   # 指定静态资源的路径
+  resources:
+    static-locations: classpath:/static/,classpath:/views/
+  thymeleaf:
+    prefix:
+      classpath: /views/
+    mode: LEGACYHTML5
+    cache: false
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.ljx.demo.entity
+  configuration:
+    cache-enabled: true
+debug: false
+
+
 # 微信配置
+#wechat:
+# appid: wx35a6d6cb9b60c960
+# secret: 409c3a8334fcf1dbed11c518b9121b66
+
 wechat:
- appid: wx35a6d6cb9b60c960
- secret: 409c3a8334fcf1dbed11c518b9121b66
+  appid: wxe6686fa60d7b1219
+  secret: e065697d6c2c06220ad810e31dd48e30
