@@ -17,6 +17,18 @@ spring:
     mode: LEGACYHTML5
     cache: false
 
+  application:
+    name: spirng-boot-rabbitmq
+  rabbitmq:
+    host: 192.168.2.185
+    port: 5672
+    username: admin
+    password: admin
+    listener:
+      concurrency: 2
+      max-concurrency: 2
+
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   type-aliases-package: com.ljx.demo.entity
